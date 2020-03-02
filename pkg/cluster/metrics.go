@@ -10,13 +10,15 @@ import (
 	"strconv"
 )
 
-func PrintPodsMetrics(namespace string, byPo bool, sort string, by string) {
+func PrintPodsMetrics(ns string, byPo bool, sort string, by string) {
 	mcl := getMetricsClientOutsideCLuster()
+	cl := getKubernetesClientOutsideCluster()
 
-	podMetricsList, _ := mcl.MetricsV1beta1().PodMetricses(namespace).List(metaV1.ListOptions{})
+	podMetricsList, _ := mcl.MetricsV1beta1().PodMetricses(ns).List(metaV1.ListOptions{})
+	podDetails, _ := cl.CoreV1().Pods(ns).List(metaV1.ListOptions{})
 
 	items := PoItems{}
-	items.buildData(podMetricsList.Items)
+	items.buildData(podMetricsList.Items, podDetails.Items)
 
 	items.sortBy = by
 	items.sortDirection = sort
@@ -26,9 +28,10 @@ func PrintPodsMetrics(namespace string, byPo bool, sort string, by string) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Pod", "Container(s)", "CPU", "Memory"})
 	table.SetBorders(tablewriter.Border{Left: false, Top: false, Right: false, Bottom: false})
-	table.SetCenterSeparator("|")
+	table.SetBorder(false)
+	table.SetRowLine(false)
+	table.SetCenterSeparator("")
 	table.SetAutoMergeCells(false)
-	table.SetRowLine(true)
 	table.AppendBulk(items.formatForPrint(byPo))
 	table.SetFooter([]string{"", "", items.getTotalCpuFormatted(), items.getTotalMemFormatted()})
 	table.Render()
@@ -46,15 +49,16 @@ func PrintNsMetrics(sort string, by string, filter string) {
 	items.buildData(ns.Items)
 
 	mcl := getMetricsClientOutsideCLuster()
-	items.getResources(mcl)
+	items.getResources(mcl, cl)
 	sortUtility.Sort(SortNsBy(items))
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Ns", "CPU", "Memory"})
 	table.SetBorders(tablewriter.Border{Left: false, Top: false, Right: false, Bottom: false})
-	table.SetCenterSeparator("|")
+	table.SetBorder(false)
+	table.SetRowLine(false)
+	table.SetCenterSeparator("")
 	table.SetAutoMergeCells(false)
-	table.SetRowLine(true)
 	table.AppendBulk(items.formatForPrint())
 	table.SetFooter([]string{"", items.getTotalCpuFormatted(), items.getTotalMemFormatted()})
 	table.Render()

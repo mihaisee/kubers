@@ -21,7 +21,6 @@ import (
 	"kubectl-ext/pkg/cluster"
 )
 
-// rsrCmd represents the rsr command
 var rspCmd = &cobra.Command{
 	Use:   "rsp",
 	Short: "List resources for a namespace grouped by pods of containers",
@@ -76,6 +75,23 @@ This kubectl plugin is meant to facilitate the inspection of the cluster used re
 	PreRun: preRunFlags,
 }
 
+var rmpoCmd = &cobra.Command{
+	Use:   "rmpo",
+	Short: "Delete pods from deployment",
+	Long: `You can delete pods from a deployment either one by one or all at once
+
+This kubectl plugin is meant to facilitate the deletion of pods from deployments.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		dpl, _ := cmd.Flags().GetString("dpl")
+		ns, _ := cmd.Flags().GetString("ns")
+		oneByOne, _ := cmd.Flags().GetBool("oneByOne")
+		wait, _ := cmd.Flags().GetBool("wait")
+		surge, _ := cmd.Flags().GetInt("surge")
+
+		cluster.RemovePoFromDeployment(dpl, ns, oneByOne, wait, surge)
+	},
+}
+
 var preRunFlags = func(cmd *cobra.Command, args []string) {
 	sort, _ := cmd.Flags().GetString("sort")
 	by, _ := cmd.Flags().GetString("by")
@@ -108,4 +124,16 @@ func init() {
 	rsnoCmd.Flags().StringP("sort", "s", "", "Order by resources used.")
 	rsnoCmd.Flags().StringP("by", "b", "", "Order by cpu or memory resources.")
 	rsnoCmd.Flags().StringP("filter", "f", "", "Filter by label.")
+
+	// Pods remove command
+	rootCmd.AddCommand(rmpoCmd)
+
+	rmpoCmd.Flags().StringP("dpl", "d", "", "Name of the deployment.")
+	rmpoCmd.Flags().StringP("ns", "n", "", "Name of the namespace.")
+	rmpoCmd.Flags().BoolP("oneByOne", "o", true, "Delete pods one by one.")
+	rmpoCmd.Flags().BoolP("wait", "w", true, "Wait for pods deletion confirmation.")
+	rmpoCmd.Flags().IntP("surge", "s", 1, "Increase the oneByOne limit.")
+
+	_ = rspCmd.MarkFlagRequired("dpl")
+	_ = rspCmd.MarkFlagRequired("ns")
 }
