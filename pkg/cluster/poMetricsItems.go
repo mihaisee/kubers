@@ -1,12 +1,11 @@
 package cluster
 
 import (
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/metrics/pkg/apis/metrics/v1beta1"
 )
 
-type PoItems struct {
-	data     map[string]map[string]PoItemResources
+type PoMetricsItems struct {
+	data     map[string]map[string]PoResourcesUsage
 	sortData []SortItem
 
 	dataForPrint [][]string
@@ -15,22 +14,17 @@ type PoItems struct {
 	sortBy        string
 }
 
-type PoItemResources struct {
+type PoResourcesUsage struct {
 	cpuUsage   int64
-	cpuRequest int64
-	cpuLimit   int64
-
 	memUsage   int64
-	memRequest int64
-	memLimit   int64
 }
 
 type SortItem struct {
 	podName   string
-	resources PoItemResources
+	resources PoResourcesUsage
 }
 
-type SortPoBy PoItems
+type SortPoBy PoMetricsItems
 
 func (m SortPoBy) Len() int {
 	return len(m.sortData)
@@ -59,15 +53,15 @@ func (m SortPoBy) Swap(i, j int) {
 	m.sortData[i], m.sortData[j] = m.sortData[j], m.sortData[i]
 }
 
-func (items *PoItems) buildData(itemsList []v1beta1.PodMetrics, podsList []v1.Pod) {
-	items.data = make(map[string]map[string]PoItemResources)
+func (items *PoMetricsItems) buildData(itemsList []v1beta1.PodMetrics) {
+	items.data = make(map[string]map[string]PoResourcesUsage)
 	items.sortData = make([]SortItem, len(itemsList))
 	for ind, i := range itemsList {
-		items.sortData[ind] = SortItem{podName: i.Name, resources: PoItemResources{memUsage: 0, cpuUsage: 0}}
-		items.data[i.Name] = map[string]PoItemResources{}
+		items.sortData[ind] = SortItem{podName: i.Name, resources: PoResourcesUsage{memUsage: 0, cpuUsage: 0}}
+		items.data[i.Name] = map[string]PoResourcesUsage{}
 		for _, c := range i.Containers {
 			memUsage, _ := c.Usage.Memory().AsInt64()
-			items.data[i.Name][c.Name] = PoItemResources{cpuUsage: c.Usage.Cpu().MilliValue(), memUsage: memUsage}
+			items.data[i.Name][c.Name] = PoResourcesUsage{cpuUsage: c.Usage.Cpu().MilliValue(), memUsage: memUsage}
 		}
 
 		items.sortData[ind].resources.memUsage = items.getTotalMemByPod(i.Name)
@@ -75,7 +69,7 @@ func (items *PoItems) buildData(itemsList []v1beta1.PodMetrics, podsList []v1.Po
 	}
 }
 
-func (items *PoItems) formatForPrint(byPod bool) [][]string {
+func (items *PoMetricsItems) formatForPrint(byPod bool) [][]string {
 	for _, row := range items.sortData {
 		if byPod == false {
 			items.dataForPrint = append(items.dataForPrint, items.getRowsByContainer(row.podName)...)
@@ -87,7 +81,7 @@ func (items *PoItems) formatForPrint(byPod bool) [][]string {
 	return items.dataForPrint
 }
 
-func (items PoItems) getRowsByContainer(podName string) [][]string {
+func (items PoMetricsItems) getRowsByContainer(podName string) [][]string {
 	var itemsForPrint [][]string
 	var i = 0
 	for c, rs := range items.data[podName] {
@@ -104,7 +98,7 @@ func (items PoItems) getRowsByContainer(podName string) [][]string {
 	return itemsForPrint
 }
 
-func (items PoItems) getRowsByPod(podName string) [][]string {
+func (items PoMetricsItems) getRowsByPod(podName string) [][]string {
 	var itemsForPrint [][]string
 
 	row := []string{podName, items.getAllContainersByPod(podName), items.getTotalCpuByPodFormatted(podName), items.getTotalMemByPodFormatted(podName)}
@@ -113,7 +107,7 @@ func (items PoItems) getRowsByPod(podName string) [][]string {
 	return itemsForPrint
 }
 
-func (items PoItems) getAllContainersByPod(pod string) string {
+func (items PoMetricsItems) getAllContainersByPod(pod string) string {
 	var c string
 	for cn := range items.data[pod] {
 		if c == "" {
@@ -126,7 +120,7 @@ func (items PoItems) getAllContainersByPod(pod string) string {
 	return c
 }
 
-func (items PoItems) getTotalMem() int64 {
+func (items PoMetricsItems) getTotalMem() int64 {
 	var tm int64
 	for po := range items.data {
 		tm += items.getTotalMemByPod(po)
@@ -135,11 +129,11 @@ func (items PoItems) getTotalMem() int64 {
 	return tm
 }
 
-func (items PoItems) getTotalMemFormatted() string {
+func (items PoMetricsItems) getTotalMemFormatted() string {
 	return formatMem(items.getTotalMem())
 }
 
-func (items PoItems) getTotalCpu() int64 {
+func (items PoMetricsItems) getTotalCpu() int64 {
 	var tc int64
 	for po := range items.data {
 		tc += items.getTotalCpuByPod(po)
@@ -148,19 +142,19 @@ func (items PoItems) getTotalCpu() int64 {
 	return tc
 }
 
-func (items PoItems) getTotalCpuFormatted() string {
+func (items PoMetricsItems) getTotalCpuFormatted() string {
 	return formatCpu(items.getTotalCpu())
 }
 
-func (items PoItems) getTotalMemByPodFormatted(pod string) string {
+func (items PoMetricsItems) getTotalMemByPodFormatted(pod string) string {
 	return formatMem(items.getTotalMemByPod(pod))
 }
 
-func (items PoItems) getTotalCpuByPodFormatted(pod string) string {
+func (items PoMetricsItems) getTotalCpuByPodFormatted(pod string) string {
 	return formatCpu(items.getTotalCpuByPod(pod))
 }
 
-func (items PoItems) getTotalMemByPod(pod string) int64 {
+func (items PoMetricsItems) getTotalMemByPod(pod string) int64 {
 	var t int64
 	for _, rs := range items.data[pod] {
 		t += rs.memUsage
@@ -169,7 +163,7 @@ func (items PoItems) getTotalMemByPod(pod string) int64 {
 	return t
 }
 
-func (items PoItems) getTotalCpuByPod(pod string) int64 {
+func (items PoMetricsItems) getTotalCpuByPod(pod string) int64 {
 	var t int64
 	for _, rs := range items.data[pod] {
 		t += rs.cpuUsage
@@ -178,10 +172,10 @@ func (items PoItems) getTotalCpuByPod(pod string) int64 {
 	return t
 }
 
-func (item PoItemResources) getMemoryFormatted() string {
+func (item PoResourcesUsage) getMemoryFormatted() string {
 	return formatMem(item.memUsage)
 }
 
-func (item PoItemResources) getCpuFormatted() string {
+func (item PoResourcesUsage) getCpuFormatted() string {
 	return formatCpu(item.cpuUsage)
 }

@@ -17,7 +17,7 @@ func PrintPodsMetrics(ns string, byPo bool, sort string, by string) {
 	podMetricsList, _ := mcl.MetricsV1beta1().PodMetricses(ns).List(metaV1.ListOptions{})
 	podDetails, _ := cl.CoreV1().Pods(ns).List(metaV1.ListOptions{})
 
-	items := PoItems{}
+	items := PoMetricsItems{}
 	items.buildData(podMetricsList.Items, podDetails.Items)
 
 	items.sortBy = by

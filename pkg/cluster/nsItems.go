@@ -88,20 +88,25 @@ func (n *NsItems) getResources(mcl *metrics.Clientset, cl *kubernetes.Clientset)
 }
 
 func getNsResources(mcl *metrics.Clientset, cl *kubernetes.Clientset, ns string, labels map[string]string, c chan NsItem) {
-	podMetricsList, _ := mcl.MetricsV1beta1().PodMetricses(ns).List(metaV1.ListOptions{})
+	podMetrics, _ := mcl.MetricsV1beta1().PodMetricses(ns).List(metaV1.ListOptions{})
 	podDetails, _ := cl.CoreV1().Pods(ns).List(metaV1.ListOptions{})
 
-	items := PoItems{}
-	if len(podMetricsList.Items) > 0 {
-		items.buildData(podMetricsList.Items, podDetails.Items)
+	poMetricsItems := PoMetricsItems{}
+	if len(podMetrics.Items) > 0 {
+		poMetricsItems.buildData(podMetrics.Items, podDetails.Items)
+	}
+
+	poDetailsItems := PoDetailsItems{}
+	if len(podDetails.Items) > 0 {
+		poDetailsItems.buildData(podDetails.Items)
 	}
 
 	nsItem := NsItem{
 		name:   ns,
 		labels: labels,
 		rs: NsItemResources{
-			cpuUsage: items.getTotalCpu(),
-			memUsage: items.getTotalMem(),
+			cpuUsage: poMetricsItems.getTotalCpu(),
+			memUsage: poMetricsItems.getTotalMem(),
 		},
 	}
 
