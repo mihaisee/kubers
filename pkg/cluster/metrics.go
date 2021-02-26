@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"context"
 	"fmt"
 	"github.com/olekukonko/tablewriter"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,8 +15,9 @@ func PrintPodsMetrics(ns string, byPo bool, sort string, by string) {
 	mcl := getMetricsClientOutsideCLuster()
 	cl := getKubernetesClientOutsideCluster()
 
-	podMetricsList, _ := mcl.MetricsV1beta1().PodMetricses(ns).List(metaV1.ListOptions{})
-	podDetails, _ := cl.CoreV1().Pods(ns).List(metaV1.ListOptions{})
+	ctx := context.Background()
+	podMetricsList, _ := mcl.MetricsV1beta1().PodMetricses(ns).List(ctx, metaV1.ListOptions{})
+	podDetails, _ := cl.CoreV1().Pods(ns).List(ctx, metaV1.ListOptions{})
 
 	items := PoItems{}
 	items.buildData(podMetricsList.Items, podDetails.Items)
@@ -40,8 +42,9 @@ func PrintPodsMetrics(ns string, byPo bool, sort string, by string) {
 func PrintNsMetrics(sort string, by string, filter string) {
 	cl := getKubernetesClientOutsideCluster()
 
+	ctx := context.Background()
 	options := metaV1.ListOptions{LabelSelector: filter}
-	ns, _ := cl.CoreV1().Namespaces().List(options)
+	ns, _ := cl.CoreV1().Namespaces().List(ctx, options)
 
 	items := NsItems{}
 	items.sortBy = by
@@ -67,8 +70,9 @@ func PrintNsMetrics(sort string, by string, filter string) {
 func PrintNoMetrics(sort string, by string, filter string) {
 	mcl := getMetricsClientOutsideCLuster()
 
+	ctx := context.Background()
 	options := metaV1.ListOptions{}
-	noMetricsList, _ := mcl.MetricsV1beta1().NodeMetricses().List(options)
+	noMetricsList, _ := mcl.MetricsV1beta1().NodeMetricses().List(ctx, options)
 
 	fmt.Println(noMetricsList)
 }
