@@ -1,16 +1,18 @@
-package cluster
+package resources
 
 import (
+	"context"
 	v1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	metrics "k8s.io/metrics/pkg/client/clientset/versioned"
+	"kubers/pkg/formatter"
 )
 
 type NsItems struct {
 	data          []NsItem
-	sortBy        string
-	sortDirection string
+	SortBy        string
+	SortDirection string
 
 	totalCpuUsage   int64
 	totalCpuRequest int64
@@ -44,15 +46,15 @@ func (n SortNsBy) Len() int {
 }
 
 func (n SortNsBy) Less(i, j int) bool {
-	switch n.sortBy {
+	switch n.SortBy {
 	case "cpu":
-		if n.sortDirection == "asc" {
+		if n.SortDirection == "asc" {
 			return n.data[i].rs.cpuUsage < n.data[j].rs.cpuUsage
 		} else {
 			return n.data[i].rs.cpuUsage > n.data[j].rs.cpuUsage
 		}
 	case "memUsage":
-		if n.sortDirection == "asc" {
+		if n.SortDirection == "asc" {
 			return n.data[i].rs.memUsage < n.data[j].rs.memUsage
 		} else {
 			return n.data[i].rs.memUsage > n.data[j].rs.memUsage
@@ -66,13 +68,13 @@ func (n SortNsBy) Swap(i, j int) {
 	n.data[i], n.data[j] = n.data[j], n.data[i]
 }
 
-func (n *NsItems) buildData(itemsList []v1.Namespace) {
+func (n *NsItems) BuildData(itemsList []v1.Namespace) {
 	for _, ns := range itemsList {
 		n.data = append(n.data, NsItem{name: ns.Name, labels: ns.Labels})
 	}
 }
 
-func (n *NsItems) getResources(mcl *metrics.Clientset, cl *kubernetes.Clientset) {
+func (n *NsItems) GetResources(mcl *metrics.Clientset, cl *kubernetes.Clientset) {
 	c := make(chan NsItem)
 	for _, ns := range n.data {
 		go getNsResources(mcl, cl, ns.name, ns.labels, c)
@@ -88,12 +90,13 @@ func (n *NsItems) getResources(mcl *metrics.Clientset, cl *kubernetes.Clientset)
 }
 
 func getNsResources(mcl *metrics.Clientset, cl *kubernetes.Clientset, ns string, labels map[string]string, c chan NsItem) {
-	podMetricsList, _ := mcl.MetricsV1beta1().PodMetricses(ns).List(metaV1.ListOptions{})
-	podDetails, _ := cl.CoreV1().Pods(ns).List(metaV1.ListOptions{})
+	ctx := context.Background()
+	podMetricsList, _ := mcl.MetricsV1beta1().PodMetricses(ns).List(ctx, metaV1.ListOptions{})
+	podDetails, _ := cl.CoreV1().Pods(ns).List(ctx, metaV1.ListOptions{})
 
 	items := PoItems{}
 	if len(podMetricsList.Items) > 0 {
-		items.buildData(podMetricsList.Items, podDetails.Items)
+		items.BuildData(podMetricsList.Items, podDetails.Items)
 	}
 
 	nsItem := NsItem{
@@ -108,15 +111,15 @@ func getNsResources(mcl *metrics.Clientset, cl *kubernetes.Clientset, ns string,
 	c <- nsItem
 }
 
-func (n NsItems) getTotalCpuFormatted() string {
-	return formatCpu(n.totalCpuUsage)
+func (n NsItems) GetTotalCpuFormatted() string {
+	return formatter.FormatCpu(n.totalCpuUsage)
 }
 
-func (n NsItems) getTotalMemFormatted() string {
-	return formatMem(n.totalMemUsage)
+func (n NsItems) GetTotalMemFormatted() string {
+	return formatter.FormatMem(n.totalMemUsage)
 }
 
-func (n NsItems) formatForPrint() [][]string {
+func (n NsItems) FormatForPrint() [][]string {
 	var itemsForPrint [][]string
 	for _, ns := range n.data {
 		row := []string{ns.name, ns.rs.getCpuFormatted(), ns.rs.getMemFormatted()}
@@ -127,9 +130,9 @@ func (n NsItems) formatForPrint() [][]string {
 }
 
 func (r NsItemResources) getMemFormatted() string {
-	return formatMem(r.memUsage)
+	return formatter.FormatMem(r.memUsage)
 }
 
 func (r NsItemResources) getCpuFormatted() string {
-	return formatCpu(r.cpuUsage)
+	return formatter.FormatCpu(r.cpuUsage)
 }

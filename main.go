@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "kubectl-ext/cmd"
+import "kubers/cmd"
 
 func main() {
   cmd.Execute()

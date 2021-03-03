@@ -1,4 +1,4 @@
-package cluster
+package client
 
 import (
 	log "github.com/sirupsen/logrus"
@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-func getKubernetesClientOutsideCluster() *kubernetes.Clientset {
+func GetKubernetesClientOutsideCluster() *kubernetes.Clientset {
 	cp := getK8sConfigPath()
 
 	// create the config from the path
@@ -25,12 +25,12 @@ func getKubernetesClientOutsideCluster() *kubernetes.Clientset {
 		panic(err.Error())
 	}
 
-	log.Info("Successfully constructed k8s client outside cluster")
+	log.Info("Successfully constructed k8s client outside printer")
 
 	return cl
 }
 
-func getMetricsClientOutsideCLuster() *metrics.Clientset {
+func GetMetricsClientOutsideCLuster() *metrics.Clientset {
 	cp := getK8sConfigPath()
 
 	// create the config from the path
@@ -47,7 +47,7 @@ func getMetricsClientOutsideCLuster() *metrics.Clientset {
 		panic(err.Error())
 	}
 
-	log.Info("Successfully constructed k8s metrics client outside cluster")
+	log.Info("Successfully constructed k8s printer client outside printer")
 
 	return mc
 }

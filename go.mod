@@ -1,4 +1,4 @@
-module kubectl-ext
+module kubers
 
 go 1.15
 

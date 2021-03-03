@@ -1,8 +1,9 @@
-package cluster
+package resources
 
 import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/metrics/pkg/apis/metrics/v1beta1"
+	"kubers/pkg/formatter"
 )
 
 type PoItems struct {
@@ -11,8 +12,8 @@ type PoItems struct {
 
 	dataForPrint [][]string
 
-	sortDirection string
-	sortBy        string
+	SortDirection string
+	SortBy        string
 }
 
 type PoItemResources struct {
@@ -37,15 +38,15 @@ func (m SortPoBy) Len() int {
 }
 
 func (m SortPoBy) Less(i, j int) bool {
-	switch m.sortBy {
+	switch m.SortBy {
 	case "cpu":
-		if m.sortDirection == "asc" {
+		if m.SortDirection == "asc" {
 			return m.sortData[i].resources.cpuUsage < m.sortData[j].resources.cpuUsage
 		} else {
 			return m.sortData[i].resources.cpuUsage > m.sortData[j].resources.cpuUsage
 		}
 	case "memUsage":
-		if m.sortDirection == "asc" {
+		if m.SortDirection == "asc" {
 			return m.sortData[i].resources.memUsage < m.sortData[j].resources.memUsage
 		} else {
 			return m.sortData[i].resources.memUsage > m.sortData[j].resources.memUsage
@@ -59,7 +60,7 @@ func (m SortPoBy) Swap(i, j int) {
 	m.sortData[i], m.sortData[j] = m.sortData[j], m.sortData[i]
 }
 
-func (items *PoItems) buildData(itemsList []v1beta1.PodMetrics, podsList []v1.Pod) {
+func (items *PoItems) BuildData(itemsList []v1beta1.PodMetrics, podsList []v1.Pod) {
 	items.data = make(map[string]map[string]PoItemResources)
 	items.sortData = make([]SortItem, len(itemsList))
 	for ind, i := range itemsList {
@@ -75,7 +76,7 @@ func (items *PoItems) buildData(itemsList []v1beta1.PodMetrics, podsList []v1.Po
 	}
 }
 
-func (items *PoItems) formatForPrint(byPod bool) [][]string {
+func (items *PoItems) FormatForPrint(byPod bool) [][]string {
 	for _, row := range items.sortData {
 		if byPod == false {
 			items.dataForPrint = append(items.dataForPrint, items.getRowsByContainer(row.podName)...)
@@ -135,8 +136,8 @@ func (items PoItems) getTotalMem() int64 {
 	return tm
 }
 
-func (items PoItems) getTotalMemFormatted() string {
-	return formatMem(items.getTotalMem())
+func (items PoItems) GetTotalMemFormatted() string {
+	return formatter.FormatMem(items.getTotalMem())
 }
 
 func (items PoItems) getTotalCpu() int64 {
@@ -148,16 +149,16 @@ func (items PoItems) getTotalCpu() int64 {
 	return tc
 }
 
-func (items PoItems) getTotalCpuFormatted() string {
-	return formatCpu(items.getTotalCpu())
+func (items PoItems) GetTotalCpuFormatted() string {
+	return formatter.FormatCpu(items.getTotalCpu())
 }
 
 func (items PoItems) getTotalMemByPodFormatted(pod string) string {
-	return formatMem(items.getTotalMemByPod(pod))
+	return formatter.FormatMem(items.getTotalMemByPod(pod))
 }
 
 func (items PoItems) getTotalCpuByPodFormatted(pod string) string {
-	return formatCpu(items.getTotalCpuByPod(pod))
+	return formatter.FormatCpu(items.getTotalCpuByPod(pod))
 }
 
 func (items PoItems) getTotalMemByPod(pod string) int64 {
@@ -179,9 +180,9 @@ func (items PoItems) getTotalCpuByPod(pod string) int64 {
 }
 
 func (item PoItemResources) getMemoryFormatted() string {
-	return formatMem(item.memUsage)
+	return formatter.FormatMem(item.memUsage)
 }
 
 func (item PoItemResources) getCpuFormatted() string {
-	return formatCpu(item.cpuUsage)
+	return formatter.FormatCpu(item.cpuUsage)
 }
