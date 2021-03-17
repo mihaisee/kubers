@@ -29,11 +29,9 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "",
-	Short: "Get resource usage for [ns|po|no]",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("kubers get called")
-	},
-	Example: "kubers get [ns|po|no]",
+	Short: "Get resource usage for [ns|po]",
+	Run: func(cmd *cobra.Command, args []string) {},
+	Example: "kubers get [ns|po]",
 	ValidArgs: []string{"get"},
 	Args: cobra.ExactValidArgs(1),
 	SuggestionsMinimumDistance: 1,
