@@ -16,27 +16,27 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
 	"kubers/pkg/printer"
 )
 
 var getPoCmd = &cobra.Command{
 	Use:   "po",
-	Short: "List resources for a namespace grouped by pods of containers",
-	Long: `You can list resources for a namespace for pods or for containers
-
-This kubectl plugin is meant to facilitate the inspection of the printer used resources by namespace.
-It can list resource usages for each pod or in a more detailed way for each container of a pod.`,
+	Short: "List pods with containers and resources.",
+	Long:  `Usage:
+kubers get po
+kubers get po -n staging
+kubers get po -b mem -o asc
+kubers get po -l app=www
+kubers get po -c`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("rsp called")
-
 		ns, _ := cmd.Flags().GetString("ns")
-		byPo, _ := cmd.Flags().GetBool("by-pod")
 		order, _ := cmd.Flags().GetString("order")
 		by, _ := cmd.Flags().GetString("by")
+		label, _ := cmd.Flags().GetString("label")
+		byContainer, _ := cmd.Flags().GetBool("by-container")
 
-		printer.PrintPodsMetrics(ns, byPo, order, by)
+		printer.PrintPodsMetrics(ns, order, by, label, byContainer)
 	},
 	PreRun: getPoCmdPreRun,
 }
@@ -48,7 +48,9 @@ var getPoCmdPreRun = func(getPoCmd *cobra.Command, args []string) {
 func init() {
 	getCmd.AddCommand(getPoCmd)
 
-	getPoCmd.Flags().StringP("order", "o", "", "Order by resources used.")
-	getPoCmd.Flags().StringP("by", "b", "", "Order by cpu or memory resources.")
-	getPoCmd.Flags().StringP("filter", "f", "", "Filter by label.")
+	getPoCmd.Flags().StringP("ns", "n", "", "Filter by namespace.")
+	getPoCmd.Flags().StringP("by", "b", "cpu", "Order by cpu or memory [cpu|mem].")
+	getPoCmd.Flags().StringP("order", "o", "desc", "Order to sort by [asc|desc].")
+	getPoCmd.Flags().StringP("label", "l", "", "Filter by label.")
+	getPoCmd.Flags().BoolP("by-container", "c", false, "List by container or grouped.")
 }

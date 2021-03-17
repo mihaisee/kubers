@@ -25,8 +25,6 @@ func GetKubernetesClientOutsideCluster() *kubernetes.Clientset {
 		panic(err.Error())
 	}
 
-	log.Info("Successfully constructed k8s client outside printer")
-
 	return cl
 }
 
@@ -46,8 +44,6 @@ func GetMetricsClientOutsideCLuster() *metrics.Clientset {
 		log.Fatalf("getMetricsClientOutsideCLuster: %v", err)
 		panic(err.Error())
 	}
-
-	log.Info("Successfully constructed k8s printer client outside printer")
 
 	return mc
 }

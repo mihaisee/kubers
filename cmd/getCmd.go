@@ -16,18 +16,15 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
 )
 
 var getCmd = &cobra.Command{
 	Use:   "get",
-	Short: "Get resource usage for [ns|po|no]",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("kubers get called")
-	},
-	Example: "kubers get [ns|po|no]",
-	ValidArgs: []string{"ns", "po", "no"},
+	Short: "Get resource usage for [ns|po]",
+	Run: func(cmd *cobra.Command, args []string) {},
+	Example: "kubers get [ns|po]",
+	ValidArgs: []string{"ns", "po"},
 	Args: cobra.ExactValidArgs(1),
 	SuggestionsMinimumDistance: 1,
 }

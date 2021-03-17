@@ -16,7 +16,6 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
 	"kubers/pkg/printer"
 )
@@ -24,15 +23,18 @@ import (
 var getNsCmd = &cobra.Command{
 	Use:   "ns",
 	Short: "List namespaces with resources",
-	Long: `List resource usage for namespaces. By default ordered 'desc' by 'cpu'`,
+	Long: `Usage: 
+kubers get ns
+kubers get ns -n staging
+kubers get ns -b mem -o asc
+kubers get ns -l selector=team-ns`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("kubers ns called")
-
+		ns, _ := cmd.Flags().GetString("ns")
 		order, _ := cmd.Flags().GetString("order")
 		by, _ := cmd.Flags().GetString("by")
-		filter, _ := cmd.Flags().GetString("filter")
+		label, _ := cmd.Flags().GetString("label")
 
-		printer.PrintNsMetrics(order, by, filter)
+		printer.PrintNsMetrics(ns, order, by, label)
 	},
 	PreRun: getNsCmdPreRun,
 }
@@ -44,7 +46,8 @@ var getNsCmdPreRun = func(getNsCmd *cobra.Command, args []string) {
 func init() {
 	getCmd.AddCommand(getNsCmd)
 
-	getNsCmd.Flags().StringP("order", "o", "", "Order to sort by.")
-	getNsCmd.Flags().StringP("by", "b", "", "Sort by cpu or memory.")
-	getNsCmd.Flags().StringP("filter", "f", "", "Filter by label.")
+	getNsCmd.Flags().StringP("ns", "n", "", "Filter by namespace.")
+	getNsCmd.Flags().StringP("by", "b", "cpu", "Sort by cpu or memory [cpu|mem].")
+	getNsCmd.Flags().StringP("order", "o", "desc", "Order to sort by [asc|desc].")
+	getNsCmd.Flags().StringP("label", "l", "", "Filter by label.")
 }
