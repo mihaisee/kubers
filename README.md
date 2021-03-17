@@ -5,7 +5,12 @@
 CLI for providing an easier way to inspect cluster resource usage.
 
 **FYI:** It uses your active `kubectl` context for connecting to cluster.
-**SECOND FYI:** It expects you have at least `go 1.16` installed. 
+
+
+**SECOND FYI:** It expects you have at least `go 1.16` installed.
+```shell
+brew install go
+```
 
 ## Installation
 
