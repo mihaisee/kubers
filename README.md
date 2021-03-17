@@ -4,6 +4,8 @@
 
 CLI for providing an easier way to inspect cluster resource usage.
 
+**FYI:** It uses your active `kubectl` context for connecting to cluster.
+
 ## Installation
 
 `make install`
