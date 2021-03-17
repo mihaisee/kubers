@@ -1,3 +1,6 @@
+.PHONY: install
 install:
+	@echo "Building..."
 	@go build
-	@sudo mv ./kubers /usr/local/bin
+	@echo "Moving binary to /usr/local/bin"
+	@sudo mv kubers /usr/local/bin
